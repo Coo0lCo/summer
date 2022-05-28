@@ -14,7 +14,7 @@ import java.util.Objects;
  */
 public class ClassPathResource implements Resource{
     private final String path;
-    private ClassLoader classLoader;
+    private final ClassLoader classLoader;
     public ClassPathResource(String path) {
         this(path, (ClassLoader) null);
     }

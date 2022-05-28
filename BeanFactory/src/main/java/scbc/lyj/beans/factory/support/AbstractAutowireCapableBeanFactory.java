@@ -1,12 +1,12 @@
 package scbc.lyj.beans.factory.support;
 
 import cn.hutool.core.bean.BeanUtil;
+import scbc.lyj.beans.factory.Aware;
 import scbc.lyj.beans.factory.BeansException;
 import scbc.lyj.beans.factory.PropertyValue;
 import scbc.lyj.beans.factory.PropertyValues;
 import scbc.lyj.beans.factory.config.AutowireCapableBeanFactory;
 import scbc.lyj.beans.factory.config.BeanDefinition;
-import scbc.lyj.beans.factory.config.BeanPostProcessor;
 import scbc.lyj.beans.factory.config.BeanReference;
 
 import java.lang.reflect.Constructor;
@@ -18,8 +18,11 @@ import java.util.stream.Collectors;
  * {@code @Date} 2022/5/22
  */
 public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory
-        implements AutowireCapableBeanFactory {
+        implements AutowireCapableBeanFactory , Aware {
     private InstantiationStrategy instantiationStrategy = new CglibSubclassingInstantiationStrategy();
+    //关联Aware感知容器接口，具体的子类实现不管，在instanceof判断就行
+
+
     @Override
     protected Object creatBean(String beanName, BeanDefinition beanDefinition, Object... args) throws BeansException {
         Object bean;
