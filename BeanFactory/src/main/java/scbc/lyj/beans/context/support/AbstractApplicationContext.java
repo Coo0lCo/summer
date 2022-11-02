@@ -1,12 +1,13 @@
 package scbc.lyj.beans.context.support;
 
+import scbc.lyj.beans.context.ApplicationEvent;
 import scbc.lyj.beans.context.ConfigurableApplicationContext;
 import scbc.lyj.beans.core.io.DefaultResourceLoader;
-import scbc.lyj.beans.factory.BeanFactory;
 import scbc.lyj.beans.factory.BeansException;
 import scbc.lyj.beans.factory.ConfigurableListableBeanFactory;
 import scbc.lyj.beans.factory.config.BeanFactoryPostProcessor;
 import scbc.lyj.beans.factory.config.BeanPostProcessor;
+import scbc.lyj.beans.factory.support.ApplicationContextAwareProcessors;
 
 import java.util.Map;
 
@@ -21,12 +22,27 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
         refreshBeanFactory();
         //获取BeanFactory
         ConfigurableListableBeanFactory beanFactory = getBeanFactory();
+        /*
+            这里贼巧妙运用的bean的扩展接口，也就是BeanPostProcessor，
+            让bean在拿的时候，creatBean方法里回调BeanPostProcessor的方法，
+            从而让Bean能感知到自己属于哪个ApplicationContext
+        */
+        beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessors(this));
         //调用BeanFactoryPostProcessors在Bean信息注册后Bean实例化前进行扩展操作
         invokeBeanFactoryPostProcessors(beanFactory);
         //在Bean实例化之前注册BeanPostProcessors
         registerBeanPostProcessors(beanFactory);
         //实例化Bean
         beanFactory.preInstantiateSingletons();
+    }
+    @Override
+    public void registerShutdownHook() {
+        //这个操作在JVM虚拟机关闭之前完成
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+    }
+    @Override
+    public void close() {
+
     }
     private void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory configurableListableBeanFactory){
         Map<String, BeanFactoryPostProcessor> beanFactoryPostProcessorMap = configurableListableBeanFactory.getBeansOfType(BeanFactoryPostProcessor.class);
@@ -42,6 +58,12 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
             configurableListableBeanFactory.addBeanPostProcessor(beanPostProcessor);
         }
     }
+
     protected abstract void refreshBeanFactory() throws BeansException;
     protected abstract ConfigurableListableBeanFactory getBeanFactory();
+
+    @Override
+    public void publishEvent(ApplicationEvent event) {
+
+    }
 }

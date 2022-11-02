@@ -9,7 +9,6 @@ public class ClassUtils {
 
     public static ClassLoader getDefaultClassLoader() {
         Thread currentThread = Thread.currentThread();
-
         return Thread.currentThread().getContextClassLoader();
     }
 

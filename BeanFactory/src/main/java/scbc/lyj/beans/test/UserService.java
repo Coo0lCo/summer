@@ -7,10 +7,8 @@ import java.util.Arrays;
  * {@code @Date} 2022/5/23
  */
 public class UserService {
-
     private String id;
     private UserDao userDao;
-
     public void queryUserInfo() {
         System.out.println("id:"+id);
         System.out.println(userDao.queryUserName("10001"));

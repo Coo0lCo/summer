@@ -1,15 +1,14 @@
 package scbc.lyj.beans.factory.support;
 
 import cn.hutool.core.bean.BeanUtil;
-import scbc.lyj.beans.factory.Aware;
-import scbc.lyj.beans.factory.BeansException;
-import scbc.lyj.beans.factory.PropertyValue;
-import scbc.lyj.beans.factory.PropertyValues;
+import cn.hutool.core.util.StrUtil;
+import scbc.lyj.beans.factory.*;
 import scbc.lyj.beans.factory.config.AutowireCapableBeanFactory;
 import scbc.lyj.beans.factory.config.BeanDefinition;
 import scbc.lyj.beans.factory.config.BeanReference;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -18,11 +17,9 @@ import java.util.stream.Collectors;
  * {@code @Date} 2022/5/22
  */
 public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory
-        implements AutowireCapableBeanFactory , Aware {
-    private InstantiationStrategy instantiationStrategy = new CglibSubclassingInstantiationStrategy();
+        implements AutowireCapableBeanFactory {
+    private InstantiationStrategy instantiationStrategy = new SimpleInstantiationStrategy();
     //关联Aware感知容器接口，具体的子类实现不管，在instanceof判断就行
-
-
     @Override
     protected Object creatBean(String beanName, BeanDefinition beanDefinition, Object... args) throws BeansException {
         Object bean;
@@ -35,10 +32,18 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         } catch (Exception e) {
             throw new BeansException("Instantiation of bean failed", e);
         }
-        addSingleton(beanName,bean);
+        registerDisposableBeanIfNecessary(beanName,bean,beanDefinition);
+        if (beanDefinition.isSingleton())
+            addSingleton(beanName,bean);
         return bean;
     }
+    protected void registerDisposableBeanIfNecessary(String beanName,Object bean,BeanDefinition beanDefinition){
+        //如果是单例的Bean则不执行销毁工作，会存储在内存中
+        if (beanDefinition.isSingleton())return;
 
+        if (bean instanceof DisposableBean || StrUtil.isNotEmpty(beanDefinition.getDestroyMethodName()))
+            registerDisposableBean(beanName, new DisposableBeanAdapter(bean, beanName, beanDefinition));
+    }
     protected Object createBeanInstance(String beanName, BeanDefinition beanDefinition, Object[] args){
         Class<?> clazz = beanDefinition.getBeanClass();
         Constructor<?>[] constructors = clazz.getDeclaredConstructors();
@@ -51,7 +56,6 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
         return instantiationStrategy.instantiate(beanDefinition,beanName,constructorToUse,args);
     }
-
     protected void applyPropertyValue(String beanName,Object bean,BeanDefinition beanDefinition){
         try {
             PropertyValues propertyValues = beanDefinition.getPropertyValues();
@@ -74,22 +78,32 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     public void setInstantiationStrategy(InstantiationStrategy instantiationStrategy) {
         this.instantiationStrategy = instantiationStrategy;
     }
-    private Object initializeBean(String beanName, Object bean, BeanDefinition beanDefinition){
+    private Object initializeBean(String beanName, Object bean, BeanDefinition beanDefinition) throws Exception {
+        //首先来看看Bean是否实现了BeanFactory感知接口,然后。。。。
+        if (bean instanceof BeanFactoryAware)
+            ((BeanFactoryAware)bean).setBeanFactory(this);
+
+        if (bean instanceof BeanClassLoaderAware)
+            ((BeanClassLoaderAware)bean).setBeanClassLoader(null);
+
+        if (bean instanceof BeanNameAware)
+            ((BeanNameAware)bean).setBeanName(beanName);
+
         Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(bean,beanName);
         invokeInitMethods(beanName,wrappedBean,beanDefinition);
         wrappedBean = applyBeanPostProcessorsAfterInitialization(bean,beanName);
         return wrappedBean;
     }
-    private void invokeInitMethods(String beanName, Object wrappedBean, BeanDefinition beanDefinition) {
-
-    }
-    @Override
-    public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName) {
-        return null;
-    }
-    @Override
-    public Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName) {
-        return null;
+    private void invokeInitMethods(String beanName, Object bean, BeanDefinition beanDefinition) throws Exception {
+        //如果实现了InitializingBean接口就直接调用afterPropertiesSet
+        if (bean instanceof InitializingBean)
+            ((InitializingBean)bean).afterPropertiesSet();
+        //如果没实现接口，但是指定了init方法Class Name 就直接反射invoke init method
+        String initMethodName = beanDefinition.getInitMethodName();
+        if(StrUtil.isNotEmpty(initMethodName)){
+            Method initMethod =  beanDefinition.getBeanClass().getMethod(initMethodName);
+            initMethod.invoke(bean);
+        }
     }
 }
 

@@ -1,10 +1,8 @@
 package scbc.lyj.beans.factory;
 
-
 /**
- * 顶层接口，感知容器Aware的顶层定义
+ * @author SCBC_LiYongJie
+ * {@code @Date} 2022/5/30
  */
-
 public interface Aware {
-
 }
