@@ -16,12 +16,14 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport
     @Override
     public Object getBean(String name) {
         Object object = getSingleton(name);
-        return Objects.isNull(object) ? creatBean(name,getBeanDefinition(name)) : object;
+        object = Objects.isNull(object) ? doGetBean(name, null) : object;
+        System.out.println(object.getClass().getName());
+        return object;
     }
     @Override
     public Object getBean(String name, Object... args) {
         Object object = getSingleton(name);
-        return Objects.isNull(object) ? creatBean(name,getBeanDefinition(name),args) : object;
+        return Objects.isNull(object) ? doGetBean(name,args) : object;
     }
     protected <T> T doGetBean(final String name,final Object[] args){
         Object sharedInstance = getSingleton(name);

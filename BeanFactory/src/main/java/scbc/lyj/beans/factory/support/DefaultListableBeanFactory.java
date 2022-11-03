@@ -48,12 +48,12 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
     @Override
     public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName) {
-        return null;
+        return existingBean;
     }
 
     @Override
     public Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName) {
-        return null;
+        return existingBean;
     }
 
 }

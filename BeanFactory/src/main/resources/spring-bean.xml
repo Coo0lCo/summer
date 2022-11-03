@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans>
-    <bean id="proxyBeanFactory" class="scbc.lyj.version07.ProxyBeanFactory"/>
-    <bean id="userService" class="scbc.lyj.beans.test.UserService">
+    <bean id="proxyBeanFactory" class="scbc.lyj.version07.ProxyBeanFactory">
+    </bean>
+    <bean id="userService" class="scbc.lyj.version06.UserService">
         <property name="id" value="7777777"/>
-        <property name="userDao" ref="userDao"/>
+        <property name="pUserDao" ref="proxyBeanFactory"/>
     </bean>
 </beans>

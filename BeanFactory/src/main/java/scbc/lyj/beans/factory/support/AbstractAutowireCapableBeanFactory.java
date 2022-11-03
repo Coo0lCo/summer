@@ -6,6 +6,7 @@ import scbc.lyj.beans.factory.*;
 import scbc.lyj.beans.factory.config.AutowireCapableBeanFactory;
 import scbc.lyj.beans.factory.config.BeanDefinition;
 import scbc.lyj.beans.factory.config.BeanReference;
+import scbc.lyj.beans.utils.DefaultBeanUtils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -27,7 +28,6 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             bean = createBeanInstance(beanName, beanDefinition, args);
             //属性填充 / 依赖注入
             applyPropertyValue(beanName,bean,beanDefinition);
-            //
             bean = initializeBean(beanName,bean,beanDefinition);
         } catch (Exception e) {
             throw new BeansException("Instantiation of bean failed", e);
@@ -49,10 +49,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         Constructor<?>[] constructors = clazz.getDeclaredConstructors();
 
         //显然我们发现这咋过滤方式相当简易，还未对类型做比对，这样传入参数如果类型对不上号就完蛋！后期版本填坑！
-        Constructor<?> constructorToUse = Arrays.stream(constructors)
-                //只做了数量比对来找到有参构造器，显然不太行
-                .filter(constructor -> (args != null && constructor.getParameterTypes().length == args.length))
-                .collect(Collectors.toList()).get(0);
+        Constructor<?> constructorToUse = null;
+        for (Constructor<?> ctor : constructors) {
+            if (null != args && ctor.getParameterTypes().length == args.length) {
+                constructorToUse = ctor;
+                break;
+            }
+        }
 
         return instantiationStrategy.instantiate(beanDefinition,beanName,constructorToUse,args);
     }
@@ -69,7 +72,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
                     value = getBean(beanReference.getBeanName());
                 }
                 //这里可以基于反射实现，也可以直接用工具包来填充进去
-                BeanUtil.setFieldValue(bean,name,value);
+                //BeanUtil.setFieldValue(bean,name,value);
+                DefaultBeanUtils.setFieldValue(bean,name,value);
             });
         }catch (Exception e){
             throw new BeansException("Error setting propertyValues :"+beanName);

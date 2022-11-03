@@ -26,7 +26,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
             if (object == null){
                 //如果首次拿，没有缓存，就先存入缓存，再返回一个object
                 object = doGetObjectFromFactoryBean(factoryBean,beanName);
-                factoryBeanObjectCache.put(beanName,Objects.isNull(object) ? null : object);
+                this.factoryBeanObjectCache.put(beanName, (object));
             }
             return Objects.isNull(object) ? null : object;
         }else {

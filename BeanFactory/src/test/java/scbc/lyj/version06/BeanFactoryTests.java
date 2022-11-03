@@ -6,7 +6,6 @@ import scbc.lyj.beans.core.io.DefaultResourceLoader;
 import scbc.lyj.beans.core.io.Resource;
 import scbc.lyj.beans.factory.support.DefaultListableBeanFactory;
 import scbc.lyj.beans.factory.support.XmlBeanDefinitionReader;
-import scbc.lyj.beans.test.UserService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,12 +37,10 @@ public class BeanFactoryTests {
     public void test_xml(){
         // 1.初始化 BeanFactory
         DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
-
         // 2. 读取配置文件&注册Bean
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(beanFactory);
         reader.loadBeanDefinitions("classpath:spring-bean.xml");
         UserService userService = (UserService) beanFactory.getBean("userService");
-
-        userService.queryUserInfo();
+        System.out.println(userService);
     }
 }
